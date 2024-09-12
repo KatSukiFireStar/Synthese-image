@@ -40,6 +40,12 @@ def intersectSphere(rayon, sphere):
             return True
         else:
             return False
+    elif delta == 0:
+        t = -b / 2 * a
+        if t >= 0:
+            return True
+        else:
+            return False
     else:
         return False
 
