@@ -1,6 +1,6 @@
 import ImageCreator as IC
 
-frenchFlag = IC.ImagePPM(300,100)
+frenchFlag = IC.ImagePPM(300,200)
 
 for i in range(frenchFlag.width):
     for j in range(frenchFlag.height):

@@ -4,7 +4,7 @@ class ImagePBM:
         self.height = height
 
         l = height * [0]
-        for i in range(len(l)):
+        for i in range(height):
             l[i] = width * [0]
         self.image = l
 
@@ -25,10 +25,10 @@ class ImagePPM:
         self.height = height
 
         l = height * [0]
-        for i in range(len(l)):
+        for i in range(height):
             l[i] = width * [0]
-        for i in range(len(l)):
-            for j in range(len(l[i])):
+        for i in range(height):
+            for j in range(width):
                 l[i][j] = 3 * [0]
         self.image = l
 
