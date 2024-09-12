@@ -10,13 +10,13 @@ class ImagePBM:
 
     def saveImage(self, path):
         path = path + ".pbm"
-        fichier=open(path,'w')
-        fichier.write("P1\n")
-        fichier.write(str(self.width) + " " + str(self.height) + "\n")
+        file=open(path,'w')
+        file.write("P1\n")
+        file.write(str(self.width) + " " + str(self.height) + "\n")
         for i in range(self.height):
             for j in range(self.width):
-                fichier.write(str(self.image[i][j]) + " ")
-            fichier.write("\n")
+                file.write(str(self.image[i][j]) + " ")
+            file.write("\n")
 
 
 class ImagePPM:
@@ -34,11 +34,11 @@ class ImagePPM:
 
     def saveImage(self, path):
         path = path + ".ppm"
-        fichier=open(path,'w')
-        fichier.write("P3\n")
-        fichier.write(str(self.width) + " " + str(self.height) + "\n")
-        fichier.write("255\n")
+        file=open(path,'w')
+        file.write("P3\n")
+        file.write(str(self.width) + " " + str(self.height) + "\n")
+        file.write("255\n")
         for i in range(self.height):
             for j in range(self.width):
-                fichier.write(str(self.image[i][j][0]) + " " + str(self.image[i][j][1]) + " " + str(self.image[i][j][2]) + "\n")
-            fichier.write("\n")
+                file.write(str(self.image[i][j][0]) + " " + str(self.image[i][j][1]) + " " + str(self.image[i][j][2]) + "\n")
+            file.write("\n")
