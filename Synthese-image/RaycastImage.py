@@ -13,7 +13,7 @@ for y in range(raycastImage.height):
         origin = Form.Vector3(0,0,-focal)
         direction = pixel - origin
 
-        rayon = Form.Rayon(origin, direction)
+        rayon = Form.Rayon(pixel, direction)
 
         if Form.intersectSphere(rayon, sphere):
             raycastImage.image[y][x][0] = 255
