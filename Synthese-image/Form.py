@@ -31,23 +31,20 @@ def intersectSphere(rayon, sphere):
     c = length(oc)**2 - sphere.radius**2
 
     delta = b**2 - 4 * a * c
-    if delta > 0:
+    if delta >= 0:
         t1 = (-b - math.sqrt(delta)) / (2 * a)
         t2 = (-b + math.sqrt(delta)) / (2 * a)
         if t1 >= 0:
-            return True
+            return t1
         elif t2 >= 0:
-            return True
+            return t2
         else:
-            return False
-    elif delta == 0:
-        t = -b / 2 * a
-        if t >= 0:
-            return True
-        else:
-            return False
+            return None
     else:
-        return False
+        return None
+
+def getIntersectionDistance(rayon, t):
+    return t * length(rayon.direction)
 
 def length(vector):
     return math.sqrt(vector.x**2 + vector.y**2 + vector.z**2)

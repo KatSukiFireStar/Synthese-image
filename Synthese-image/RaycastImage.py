@@ -3,9 +3,9 @@ import Form
 
 raycastImage = IC.ImagePPM(800,600)
 
-sphere = Form.Sphere(100, Form.Vector3(0, 0, 200))
+sphere = Form.Sphere(180, Form.Vector3(0, 0, 200))
 radius = sphere.radius
-focal = 50
+focal = 10000
 
 for y in range(raycastImage.height):
     for x in range(raycastImage.width):
@@ -15,10 +15,14 @@ for y in range(raycastImage.height):
 
         rayon = Form.Rayon(pixel, direction)
 
-        if Form.intersectSphere(rayon, sphere):
-            raycastImage.image[y][x][0] = 255
-            raycastImage.image[y][x][1] = 255
-            raycastImage.image[y][x][2] = 255
+        it = Form.intersectSphere(rayon, sphere)
+
+        if it is not None:
+            dist = Form.getIntersectionDistance(rayon, it)
+            color = dist * 1
+            raycastImage.image[y][x][0] = int(color)
+            raycastImage.image[y][x][1] = int(color)
+            raycastImage.image[y][x][2] = int(color)
         else:
             raycastImage.image[y][x][0] = 255
             raycastImage.image[y][x][1] = 180
