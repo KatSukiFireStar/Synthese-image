@@ -1,17 +1,7 @@
 import math
 
-class Sphere:
-    def __init__(self, radius, center):
-        self.radius = radius
-        self.center = center
-
-class Rayon:
-    def __init__(self, origin, direction):
-        self.origin = origin
-        self.direction = direction
-
 class Vector3:
-    def __init__(self, x, y, z):
+    def __init__(self, x:int, y:int, z:int):
         self.x = x
         self.y = y
         self.z = z
@@ -22,6 +12,16 @@ class Vector3:
     def __add__(self, other):
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
 
+
+class Sphere:
+    def __init__(self, radius:int, center:Vector3):
+        self.radius = radius
+        self.center = center
+
+class Rayon:
+    def __init__(self, origin:Vector3, direction:Vector3):
+        self.origin = origin
+        self.direction = direction
 
 def intersectSphere(rayon, sphere):
     oc = rayon.origin - sphere.center
