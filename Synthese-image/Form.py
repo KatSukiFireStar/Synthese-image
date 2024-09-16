@@ -1,7 +1,7 @@
 import math
 
 class Vector3:
-    def __init__(self, x:int, y:int, z:int):
+    def __init__(self, x:float, y:float, z:float):
         self.x = x
         self.y = y
         self.z = z
@@ -19,7 +19,7 @@ class Vector3:
         return Vector3(self.x / other, self.y / other, self.z / other)
 
 class Sphere:
-    def __init__(self, radius:int, center:Vector3):
+    def __init__(self, radius:float, center:Vector3):
         self.radius = radius
         self.center = center
 
@@ -34,11 +34,11 @@ class Lampe:
         self.intensity = intensity
 
 class Scene:
-    def __init__(self, spheres:list[Sphere], lampes:list[Lampe]):
+    def __init__(self, spheres:list[Sphere], lights:list[Lampe]):
         self.spheres = spheres
-        self.lampes = lampes
+        self.lights = lights
 
-def intersectSphere(rayon, sphere):
+def intersectSphere(rayon:Rayon, sphere:Sphere):
     oc = rayon.origin - sphere.center
 
     a = length(rayon.direction)**2
@@ -60,14 +60,14 @@ def intersectSphere(rayon, sphere):
     else:
         return None
 
-def getIntersectionDistance(rayon, t):
+def getIntersectionDistance(rayon:Rayon, t:float):
     return t * length(rayon.direction)
 
-def length(vector):
+def length(vector:Vector3):
     return math.sqrt(vector.x**2 + vector.y**2 + vector.z**2)
 
-def dot(vector1, vector2):
+def dot(vector1:Vector3, vector2:Vector3):
     return vector1.x * vector2.x + vector1.y * vector2.y + vector1.z * vector2.z
 
-def normalize(vector):
+def normalize(vector:Vector3):
     return vector / length(vector)
