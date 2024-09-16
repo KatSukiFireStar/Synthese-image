@@ -19,24 +19,32 @@ class Vector3:
         return Vector3(self.x / other, self.y / other, self.z / other)
 
 class Sphere:
-    def __init__(self, radius:float, center:Vector3):
+    def __init__(self, radius:float, center:Vector3, albedo:Vector3):
         self.radius = radius
         self.center = center
+        self.albedo = albedo
 
 class Rayon:
     def __init__(self, origin:Vector3, direction:Vector3):
         self.origin = origin
         self.direction = direction
 
-class Lampe:
-    def __init__(self, position:Vector3, intensity:float):
+class Light:
+    def __init__(self, position:Vector3, albedo:Vector3, intensity:float):
         self.position = position
         self.intensity = intensity
+        self.albedo = albedo
 
 class Scene:
-    def __init__(self, spheres:list[Sphere], lights:list[Lampe]):
+    def __init__(self, spheres:list[Sphere], lights:list[Light]):
         self.spheres = spheres
         self.lights = lights
+        
+    def addSphere(self, sphere:Sphere):
+        self.spheres = self.spheres+[sphere]
+        
+    def addLight(self, light:Light):
+        self.lights = self.lights+[light]
 
 def intersectSphere(rayon:Rayon, sphere:Sphere):
     oc = rayon.origin - sphere.center
