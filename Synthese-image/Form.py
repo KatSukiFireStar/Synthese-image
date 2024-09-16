@@ -12,6 +12,11 @@ class Vector3:
     def __add__(self, other):
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
 
+    def __mul__(self, other:(float, int)):
+        return Vector3(self.x * other, self.y * other, self.z * other)
+
+    def __truediv__(self, other:(float, int)):
+        return Vector3(self.x / other, self.y / other, self.z / other)
 
 class Sphere:
     def __init__(self, radius:int, center:Vector3):
@@ -22,6 +27,16 @@ class Rayon:
     def __init__(self, origin:Vector3, direction:Vector3):
         self.origin = origin
         self.direction = direction
+
+class Lampe:
+    def __init__(self, position:Vector3, intensity:float):
+        self.position = position
+        self.intensity = intensity
+
+class Scene:
+    def __init__(self, spheres:list[Sphere], lampes:list[Lampe]):
+        self.spheres = spheres
+        self.lampes = lampes
 
 def intersectSphere(rayon, sphere):
     oc = rayon.origin - sphere.center
@@ -35,9 +50,11 @@ def intersectSphere(rayon, sphere):
         t1 = (-b - math.sqrt(delta)) / (2 * a)
         t2 = (-b + math.sqrt(delta)) / (2 * a)
         if t1 >= 0:
-            return t1
+            inter = rayon.origin + rayon.direction * t1
+            return t1, inter
         elif t2 >= 0:
-            return t2
+            inter = rayon.origin + rayon.direction * t2
+            return t2, inter
         else:
             return None
     else:
@@ -51,3 +68,6 @@ def length(vector):
 
 def dot(vector1, vector2):
     return vector1.x * vector2.x + vector1.y * vector2.y + vector1.z * vector2.z
+
+def normalize(vector):
+    return vector / length(vector)
