@@ -28,10 +28,9 @@ for y in range(raycastImage.height):
         rayon = Form.Rayon(pixel, direction)
 
         for sph in scene.spheres:
-            for light in scene.lights:
-                it = Form.intersectSphere(rayon, sph)
-
-                if it is not None:
+            it = Form.intersectSphere(rayon, sph)
+            if it is not None:
+                for light in scene.lights:
                     N = it[1] - sph.center
                     norm = Form.normalize(N)
                     rayonLampe = Form.Rayon(it[1] + (norm / 1000), light.position - it[1] + (norm / 1000))
@@ -58,16 +57,16 @@ for y in range(raycastImage.height):
                             col.z = 255
                         raycastImage.image[y][x] = [int(col.x), int(col.y), int(col.z)]
 
-                else:
-                    interBool = False
-                    for s in scene.spheres:
-                        if s == sph:
-                            continue
+            else:
+                interBool = False
+                for s in scene.spheres:
+                    if s == sph:
+                        continue
 
-                        inter = Form.intersectSphere(rayon, s)
-                        if inter is not None:
-                            interBool = True
-                    if not interBool:
-                        raycastImage.image[y][x] = [0, 0, 0]
+                    inter = Form.intersectSphere(rayon, s)
+                    if inter is not None:
+                        interBool = True
+                if not interBool:
+                    raycastImage.image[y][x] = [0, 0, 0]
 
 raycastImage.saveImage("raycastImage")
