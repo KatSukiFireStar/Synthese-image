@@ -30,10 +30,9 @@ class Rayon:
         self.direction = direction
 
 class Light:
-    def __init__(self, position:Vector3, albedo:Vector3, intensity:float):
+    def __init__(self, position:Vector3, intensity:Vector3):
         self.position = position
         self.intensity = intensity
-        self.albedo = albedo
 
 class Scene:
     def __init__(self, spheres:list[Sphere], lights:list[Light]):
