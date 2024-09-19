@@ -174,8 +174,6 @@ float sq(const float val) {
 }
 
 int main() {
-    // imagePink();
-
     float width = 800;
     float height = 600;
 
