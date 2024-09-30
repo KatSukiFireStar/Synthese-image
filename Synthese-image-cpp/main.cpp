@@ -2,6 +2,7 @@
 #include <cmath>
 #include <float.h>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -24,6 +25,18 @@ struct Color {
 
     static Color black() {
         return Color{0, 0, 0};
+    }
+
+    Color operator*(const Color & color) const {
+        return Color{this->red * color.red, this->green * color.green, this->blue * color.blue};
+    }
+
+    Color operator*(float x) const {
+        return Color{this->red * x, this->green * x, this->blue * x};
+    }
+
+    Color operator+(const Color & color) const {
+        return Color{this->red + color.red, this->green + color.green, this->blue + color.blue};
     }
 };
 
@@ -163,23 +176,23 @@ struct BoundingBox {
 struct ObjectHierarchy {
     bool isLeaf = true;
     BoundingBox boundingBox;
-    vector<Sphere> spheres;
+    vector<shared_ptr<Sphere>> spheres;
 
-    ObjectHierarchy* leftTree;
+    shared_ptr<ObjectHierarchy> leftTree;
     bool hasLeftTree;
-    ObjectHierarchy* rightTree;
+    shared_ptr<ObjectHierarchy> rightTree;
     bool hasRightTree;
 
-    ObjectHierarchy(const BoundingBox &bounding_box, const vector<Sphere> &spheres) : boundingBox(bounding_box), spheres(spheres), leftTree(), hasLeftTree(false), rightTree(), hasRightTree(false) {}
+    ObjectHierarchy(const BoundingBox &bounding_box, const vector<shared_ptr<Sphere>> &spheres) : boundingBox(bounding_box), spheres(spheres), leftTree(), hasLeftTree(false), rightTree(), hasRightTree(false) {}
     ObjectHierarchy() : boundingBox(), spheres(), leftTree(), hasLeftTree(false), rightTree(), hasRightTree(false) {}
-    ObjectHierarchy(const BoundingBox &bounding_box, ObjectHierarchy* leftTree, ObjectHierarchy* rightTree) : isLeaf(false), boundingBox(bounding_box), spheres(), leftTree(leftTree), hasLeftTree(true), rightTree(rightTree), hasRightTree(true) {}
+    ObjectHierarchy(const BoundingBox &bounding_box, shared_ptr<ObjectHierarchy> leftTree, shared_ptr<ObjectHierarchy> rightTree) : isLeaf(false), boundingBox(bounding_box), spheres(), leftTree(std::move(leftTree)), hasLeftTree(true), rightTree(std::move(rightTree)), hasRightTree(true) {}
 };
 
 struct Scene {
-    ObjectHierarchy hierarchy;
+    shared_ptr<ObjectHierarchy> hierarchy;
     vector<Light> lights;
 
-    Scene(const ObjectHierarchy hierarchy, const vector<Light>& lights) : hierarchy(hierarchy), lights(lights) {}
+    Scene(ObjectHierarchy* hierarchy, const vector<Light>& lights) : hierarchy(hierarchy), lights(lights) {}
 
     Scene() : hierarchy(), lights(){}
 
@@ -195,42 +208,42 @@ BoundingBox sphereToBoundingBox(const Sphere &sphere) {
     return BoundingBox{pointMin, pointMax};
 }
 
-bool compareSphereX(Sphere &s1, Sphere &s2) {
-    return s1.center.x < s2.center.x;
+bool compareSphereX(shared_ptr<Sphere> s1, shared_ptr<Sphere> s2) {
+    return s1->center.x < s2->center.x;
 }
 
-bool compareSphereY(Sphere &s1, Sphere &s2) {
-    return s1.center.y < s2.center.y;
+bool compareSphereY(shared_ptr<Sphere> s1, shared_ptr<Sphere> s2) {
+    return s1->center.y < s2->center.y;
 }
 
-bool compareSphereZ(Sphere &s1, Sphere &s2) {
-    return s1.center.z < s2.center.z;
+bool compareSphereZ(shared_ptr<Sphere> s1, shared_ptr<Sphere> s2) {
+    return s1->center.z < s2->center.z;
 }
 
-ObjectHierarchy buildHierarchy(const vector<Sphere>& spheres) {
-    BoundingBox boundingBox = sphereToBoundingBox(spheres[0]);
-    for (Sphere sphere : spheres) {
-        boundingBox = boundingBox.unionBox(sphereToBoundingBox(sphere));
+shared_ptr<ObjectHierarchy> buildHierarchy(vector<shared_ptr<Sphere>>& spheres) {
+    BoundingBox boundingBox = sphereToBoundingBox(*spheres[0]);
+    for (shared_ptr<Sphere> sphere : spheres) {
+        boundingBox = boundingBox.unionBox(sphereToBoundingBox(*sphere));
     }
     if (spheres.size() < 10) {
-        return ObjectHierarchy{boundingBox, spheres};
+        return make_shared<ObjectHierarchy>(boundingBox, spheres);
     }
-    // switch (boundingBox.largestAxis()) {
-    //     case X:
-    //         sort(spheres.begin(), spheres.end(), compareSphereX);
-    //         break;
-    //     case Y:
-    //         sort(spheres.begin(), spheres.end(), compareSphereY);
-    //         break;
-    //     case Z:
-    //         sort(spheres.begin(), spheres.end(), compareSphereZ);
-    //         break;
-    //     default:
-    //         break;
-    // }
+    switch (boundingBox.largestAxis()) {
+        case X:
+            sort(spheres.begin(), spheres.end(), compareSphereX);
+            break;
+        case Y:
+            sort(spheres.begin(), spheres.end(), compareSphereY);
+            break;
+        case Z:
+            sort(spheres.begin(), spheres.end(), compareSphereZ);
+            break;
+        default:
+            break;
+    }
 
-    vector<Sphere> leftSpheres;
-    vector<Sphere> rightSpheres;
+    vector<shared_ptr<Sphere>> leftSpheres;
+    vector<shared_ptr<Sphere>> rightSpheres;
     int cut = spheres.size() / 2;
     int len = spheres.size();
 
@@ -241,31 +254,36 @@ ObjectHierarchy buildHierarchy(const vector<Sphere>& spheres) {
         rightSpheres.push_back(spheres[i]);
     }
 
-    ObjectHierarchy leftTree = buildHierarchy(leftSpheres);
-    ObjectHierarchy rightTree = buildHierarchy(rightSpheres);
+    shared_ptr<ObjectHierarchy> leftTree = buildHierarchy(leftSpheres);
+    shared_ptr<ObjectHierarchy> rightTree = buildHierarchy(rightSpheres);
 
-    return ObjectHierarchy{boundingBox, (&leftTree), (&rightTree)};
+    return make_shared<ObjectHierarchy>(boundingBox, leftTree, rightTree);
 }
 
 struct IntersectionSphere {
     bool isIntersection;
     float distance;
     Point intersection;
+    Direction normal;
     Sphere sphere;
 
-    IntersectionSphere(const bool isIntersection, const float distance, const Point intersection, const Sphere &sphere) : isIntersection(isIntersection), distance(distance), intersection(intersection), sphere(sphere) {}
+    IntersectionSphere(const bool isIntersection, const float distance, const Point intersection, const Direction normal, const Sphere &sphere) : isIntersection(
+        isIntersection), distance(distance), intersection(intersection), normal(normal), sphere(sphere) {
+    }
 
-    IntersectionSphere() : isIntersection(false), distance(0), intersection(Point{0,0,0}), sphere(Sphere(0, Point{0,0,0}, Color::white())) {}
+    IntersectionSphere() : isIntersection(false), distance(0), intersection(Point{0, 0, 0}), normal(Direction{0,0,0}),
+                           sphere(Sphere(0, Point{0, 0, 0}, Color::white())) {
+    }
 };
 
-IntersectionSphere intersectSphere(const Rayon &ray, const vector<Sphere> spheres) {
+IntersectionSphere intersectSphere(const Rayon &ray, const vector<shared_ptr<Sphere>> spheres) {
     vector<IntersectionSphere> intersections;
-    for (Sphere sphere : spheres){
-        Direction oc = ray.origin - sphere.center;
+    for (shared_ptr<Sphere> sphere : spheres){
+        Direction oc = ray.origin - (*sphere).center;
 
         float a = ray.direction.length_squared();
         float b = 2 * oc.dot(ray.direction);
-        float c = oc.length_squared() - (sphere.radius * sphere.radius);
+        float c = oc.length_squared() - ((*sphere).radius * (*sphere).radius);
 
         float delta = b * b - 4 * a * c;
 
@@ -273,10 +291,13 @@ IntersectionSphere intersectSphere(const Rayon &ray, const vector<Sphere> sphere
             float t1 = (-b - sqrt(delta)) / (2 * a);
             float t2 = (-b + sqrt(delta)) / (2 * a);
             if (t1 >= 0){
-                intersections.push_back(IntersectionSphere{true, t1, ray.origin + ray.direction * t1, sphere});
+                Point p = ray.origin + ray.direction * t1;
+                Direction n = (p - (*sphere).center).normalize();
+                intersections.push_back(IntersectionSphere{true, t1, p, n, *sphere});
             }else if (t2 >= 0) {
-
-                intersections.push_back(IntersectionSphere{true, t2, ray.origin + ray.direction * t2, sphere});
+                Point p = ray.origin + ray.direction * t2;
+                Direction n = (p - (*sphere).center).normalize();
+                intersections.push_back(IntersectionSphere{true, t2, p, n, *sphere});
             }
         }
     }
@@ -322,8 +343,8 @@ IntersectionBox intersectCube(const Rayon &ray, const BoundingBox &box) {
     float tz1 = (box.pointMin.z - ray.origin.z) * rinvz;
     float tz2 = (box.pointMax.z - ray.origin.z) * rinvz;
 
-    float tminpp = min(tminp, min(tz1, tz2));
-    float tmaxpp = max(tmaxp, max(tz1, tz2));
+    float tminpp = max(tminp, min(tz1, tz2));
+    float tmaxpp = min(tmaxp, max(tz1, tz2));
 
     if (tmaxpp < tminpp) {
         return IntersectionBox{};
@@ -332,20 +353,20 @@ IntersectionBox intersectCube(const Rayon &ray, const BoundingBox &box) {
     return IntersectionBox{tminpp};
 }
 
-IntersectionSphere intersectObject(const Rayon &ray, const ObjectHierarchy &hierarchy) {
-    if (hierarchy.isLeaf) {
-        IntersectionBox it = intersectCube(ray, hierarchy.boundingBox);
+IntersectionSphere intersectObject(const Rayon &ray, shared_ptr<ObjectHierarchy> &hierarchy) {
+    if (hierarchy->isLeaf) {
+        IntersectionBox it = intersectCube(ray, hierarchy->boundingBox);
         if (it.isIntersection) {
-            return intersectSphere(ray, hierarchy.spheres);
+            return intersectSphere(ray, hierarchy->spheres);
         }
         return {};
     }
-    IntersectionBox it = intersectCube(ray, hierarchy.boundingBox);
+    IntersectionBox it = intersectCube(ray, hierarchy->boundingBox);
     if (!it.isIntersection) {
         return {};
     }
-    IntersectionSphere it_left = intersectObject(ray, *hierarchy.leftTree);
-    IntersectionSphere it_right = intersectObject(ray, *hierarchy.rightTree);
+    IntersectionSphere it_left = intersectObject(ray, hierarchy->leftTree);
+    IntersectionSphere it_right = intersectObject(ray, hierarchy->rightTree);
 
     if (!it_left.isIntersection) {
         return it_right;
@@ -366,6 +387,15 @@ float sq(const float val) {
     return val * val;
 }
 
+int countBoundingBox(shared_ptr<ObjectHierarchy> hierarchy, int count) {
+    if (hierarchy->isLeaf) {
+        return count;
+    }
+    count = countBoundingBox(hierarchy->leftTree, count + 1);
+    count = countBoundingBox(hierarchy->rightTree, count + 1);
+    return count;
+}
+
 int main() {
     clock_t begin = clock();
 
@@ -380,37 +410,38 @@ int main() {
     int focal = 10000;
 
     Scene scene = Scene();
-    vector<Sphere> spheres;
+    vector<shared_ptr<Sphere>> spheres;
+    //
+    // spheres.push_back(make_shared<Sphere>(180, Point{0,0,200}, Color{0,0,1}));
+    // spheres.push_back(make_shared<Sphere>(180, Point{-200,-400,200}, Color{1,1,1}));
 
-    // Sphere sphere = Sphere(180, Point{0,0,200}, Color{0,0,1});
-    // spheres.push_back(sphere);
-    // Sphere sphere2 = Sphere(180, Point{-200,-400,200}, Color{1,1,1});
-    // spheres.push_back(sphere2);
-
-    int n = 2;
-    float d = 300 / n;
-    float radius = 80 / n;
+    int n = 10;
+    float d = 300.0f / static_cast<float>(n);
+    float radius = 80.0f / static_cast<float>(n);
 
     for (int i = -n; i < n; i++) {
         for (int j = -n; j < n; j++) {
             for (int k = -n; k < n; k++) {
-                spheres.emplace_back(radius, Point{i * d, j * d, 200 + k * d}, Color::white());
+                spheres.push_back(make_shared<Sphere>(radius, Point{static_cast<float>(i) * d, static_cast<float>(j) * d, 200 + static_cast<float>(k) * d}, Color::white()));
             }
         }
     }
 
     cout << "Nb spheres: " << spheres.size() << endl;
 
-    Light lampe = Light(Point{300, -200, 200}, Color{100000, 100000, 100000});
+    Light lampe = Light(Point{300, -200, 200}, Color{1000, 1000, 1000});
     scene.addLight(lampe);
-    Light lampe2 = Light(Point{0, -500, 200}, Color{100000, 0, 0});
+    Light lampe2 = Light(Point{0, -500, 200}, Color{1000, 0, 0});
     scene.addLight(lampe2);
 
     // Sphere sol = Sphere(10000, Point{0,10400,-1000}, Color{1,1,1});
     // scene.addSphere(sol);
 
-    ObjectHierarchy objectHierarchy = buildHierarchy(spheres);
+    shared_ptr<ObjectHierarchy> objectHierarchy = buildHierarchy(spheres);
     scene.hierarchy = objectHierarchy;
+
+
+    cout << "Nb bounding: " << countBoundingBox(objectHierarchy, 0) << endl;
 
 
     for (int y = 0; static_cast<float>(y) < height; y++) {
@@ -425,36 +456,55 @@ int main() {
 
             IntersectionSphere it = intersectObject(rayon, scene.hierarchy);
 
+            Color col = Color();
             if (it.isIntersection) {
-                Sphere sph = it.sphere;
-                Color col = Color();
-                Direction N = it.intersection - sph.center;
-                Direction norm = N.normalize();
-
                 for (Light light : scene.lights) {
-                    Rayon rayonLampe = Rayon(it.intersection + (norm / 100), light.position - it.intersection + (norm / 100));
+                    Direction to_light = light.position - it.intersection;
+                    float light_dist = to_light.length();
+                    float cos = to_light.normalize().dot(it.normal);
 
-                    Direction l_i = rayonLampe.direction.inverse();
-                    Color sphereAlbedo = sph.albedo;
-
-                    IntersectionSphere it2 = intersectObject(rayonLampe, scene.hierarchy);
-                    if (!it2.isIntersection) {
-                        float v = abs(norm.dot(l_i));
-                        float len_l = rayonLampe.direction.length_squared();
-
-                        col.red += light.intensity.red / len_l * sphereAlbedo.red * v;
-                        col.green += light.intensity.green / len_l * sphereAlbedo.green * v;
-                        col.blue += light.intensity.blue / len_l * sphereAlbedo.blue * v;
-                    }else {
-                        float len_l = rayonLampe.direction.length();
-                        if (len_l < rayonLampe.getIntersectionDistance(it2.distance)) {
-                            float v = abs(norm.dot(l_i));
-
-                            col.red += light.intensity.red / sq(len_l) * sphereAlbedo.red * v;
-                            col.green += light.intensity.green / sq(len_l) * sphereAlbedo.green * v;
-                            col.blue += light.intensity.blue / sq(len_l) * sphereAlbedo.blue * v;
-                        }
+                    if (cos < 0) {
+                        cos = 0;
+                    }else if (cos > 1) {
+                        cos = 1;
                     }
+
+                    Color v = it.sphere.albedo * light.intensity * (cos / light_dist);
+
+                    Direction shadow_direction = to_light.normalize();
+                    Point origin = it.intersection + shadow_direction * 0.1;
+
+                    Rayon shadow_rayon = Rayon(origin, shadow_direction);
+                    IntersectionSphere it_shadow = intersectObject(shadow_rayon, scene.hierarchy);
+
+                    float visibility = 1;
+
+                    if(!it_shadow.isIntersection) {
+                        visibility = 1;
+                    }else if (it_shadow.distance > light_dist) {
+                        visibility = 1;
+                    }
+
+                    col = col + v * visibility;
+
+                    // IntersectionSphere it2 = intersectObject(rayonLampe, scene.hierarchy);
+                    // if (!it2.isIntersection) {
+                    //     float v = abs(norm.dot(l_i));
+                    //     float len_l = rayonLampe.direction.length_squared();
+                    //
+                    //     col.red += light.intensity.red / len_l * sphereAlbedo.red * v;
+                    //     col.green += light.intensity.green / len_l * sphereAlbedo.green * v;
+                    //     col.blue += light.intensity.blue / len_l * sphereAlbedo.blue * v;
+                    // }else {
+                    //     float len_l = rayonLampe.direction.length();
+                    //     if (len_l < rayonLampe.getIntersectionDistance(it2.distance)) {
+                    //         float v = abs(norm.dot(l_i));
+                    //
+                    //         col.red += light.intensity.red / sq(len_l) * sphereAlbedo.red * v;
+                    //         col.green += light.intensity.green / sq(len_l) * sphereAlbedo.green * v;
+                    //         col.blue += light.intensity.blue / sq(len_l) * sphereAlbedo.blue * v;
+                    //     }
+                    // }
 
                     if (col.red > 255) {
                         col.red = 255;
@@ -466,14 +516,8 @@ int main() {
                         col.green = 255;
                     }
                 }
-                fileOut << static_cast<int>(col.red) << " " << static_cast<int>(col.green) << " " << static_cast<int>(col.blue) << endl;
             }
-            // else if(inter.isIntersection) {
-            //     fileOut << 255 * inter.box.albedo.red << " " << 255 * inter.box.albedo.green << " " << 255 * inter.box.albedo.blue << endl;
-            // }
-            else{
-                fileOut << "250 180 0" << endl;
-            }
+            fileOut << static_cast<int>(col.red) << " " << static_cast<int>(col.green) << " " << static_cast<int>(col.blue) << endl;
         }
         fileOut << endl;
     }
