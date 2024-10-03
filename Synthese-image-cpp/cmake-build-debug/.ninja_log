@@ -1,16 +1,6 @@
 # ninja log v6
 42	765	7491276628425778	build.ninja	695f18c04f5f94de
-8	1356	7493912476795720	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1357	1735	7493912490276984	Synthese_image_cpp.exe	637544115151a8e
-15	1441	7493912824968364	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1442	1823	7493912839245955	Synthese_image_cpp.exe	637544115151a8e
-8	1336	7493913016222483	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1338	1715	7493913029507585	Synthese_image_cpp.exe	637544115151a8e
-8	1296	7493913250703592	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1299	1674	7493913263602238	Synthese_image_cpp.exe	637544115151a8e
-8	1425	7493913936122628	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1426	1808	7493913950293751	Synthese_image_cpp.exe	637544115151a8e
-8	1337	7493914178214789	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1338	1723	7493914191508499	Synthese_image_cpp.exe	637544115151a8e
-8	1367	7493914425356195	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
-1368	1745	7493914438948401	Synthese_image_cpp.exe	637544115151a8e
+9	1606	7496526095303440	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
+1608	2056	7496526111296557	Synthese_image_cpp.exe	637544115151a8e
+17	1621	7496526406974614	CMakeFiles/Synthese_image_cpp.dir/main.cpp.obj	eca8db69245a928e
+1622	2085	7496526423022819	Synthese_image_cpp.exe	637544115151a8e

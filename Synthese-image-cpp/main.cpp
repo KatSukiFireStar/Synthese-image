@@ -35,6 +35,10 @@ struct Color {
         return Color{this->red * x, this->green * x, this->blue * x};
     }
 
+    Color operator*(int x) const {
+        return Color{this->red * x, this->green * x, this->blue * x};
+    }
+
     Color operator+(const Color & color) const {
         return Color{this->red + color.red, this->green + color.green, this->blue + color.blue};
     }
@@ -279,11 +283,11 @@ struct IntersectionSphere {
 IntersectionSphere intersectSphere(const Rayon &ray, const vector<shared_ptr<Sphere>> spheres) {
     vector<IntersectionSphere> intersections;
     for (shared_ptr<Sphere> sphere : spheres){
-        Direction oc = ray.origin - (*sphere).center;
+        Direction oc = ray.origin - sphere->center;
 
         float a = ray.direction.length_squared();
         float b = 2 * oc.dot(ray.direction);
-        float c = oc.length_squared() - ((*sphere).radius * (*sphere).radius);
+        float c = oc.length_squared() - (sphere->radius * sphere->radius);
 
         float delta = b * b - 4 * a * c;
 
@@ -292,11 +296,11 @@ IntersectionSphere intersectSphere(const Rayon &ray, const vector<shared_ptr<Sph
             float t2 = (-b + sqrt(delta)) / (2 * a);
             if (t1 >= 0){
                 Point p = ray.origin + ray.direction * t1;
-                Direction n = (p - (*sphere).center).normalize();
+                Direction n = (p - sphere->center).normalize();
                 intersections.push_back(IntersectionSphere{true, t1, p, n, *sphere});
             }else if (t2 >= 0) {
                 Point p = ray.origin + ray.direction * t2;
-                Direction n = (p - (*sphere).center).normalize();
+                Direction n = (p - sphere->center).normalize();
                 intersections.push_back(IntersectionSphere{true, t2, p, n, *sphere});
             }
         }
@@ -399,10 +403,10 @@ int countBoundingBox(shared_ptr<ObjectHierarchy> hierarchy, int count) {
 int main() {
     clock_t begin = clock();
 
-    float width = 800;
-    float height = 600;
+    int width = 800;
+    int height = 600;
 
-    string fullPath = "../raycastImage2.ppm";
+    string fullPath = "../raycastImage3.ppm";
     ofstream fileOut;
     fileOut.open(fullPath.c_str());
     fileOut << "P3" << endl << width << " " << height << endl << "255" << endl;
@@ -411,27 +415,27 @@ int main() {
 
     Scene scene = Scene();
     vector<shared_ptr<Sphere>> spheres;
+
+    spheres.push_back(make_shared<Sphere>(180, Point{0,0,200}, Color{1,1,1}));
+    spheres.push_back(make_shared<Sphere>(180, Point{-200,-400,200}, Color{1,1,1}));
+
+    // int n = 10;
+    // float d = 300.0f / static_cast<float>(n);
+    // float radius = 80.0f / static_cast<float>(n);
     //
-    // spheres.push_back(make_shared<Sphere>(180, Point{0,0,200}, Color{0,0,1}));
-    // spheres.push_back(make_shared<Sphere>(180, Point{-200,-400,200}, Color{1,1,1}));
-
-    int n = 10;
-    float d = 300.0f / static_cast<float>(n);
-    float radius = 80.0f / static_cast<float>(n);
-
-    for (int i = -n; i < n; i++) {
-        for (int j = -n; j < n; j++) {
-            for (int k = -n; k < n; k++) {
-                spheres.push_back(make_shared<Sphere>(radius, Point{static_cast<float>(i) * d, static_cast<float>(j) * d, 200 + static_cast<float>(k) * d}, Color::white()));
-            }
-        }
-    }
+    // for (int i = -n; i < n; i++) {
+    //     for (int j = -n; j < n; j++) {
+    //         for (int k = -n; k < n; k++) {
+    //             spheres.push_back(make_shared<Sphere>(radius, Point{static_cast<float>(i) * d, static_cast<float>(j) * d, 200 + static_cast<float>(k) * d}, Color::white()));
+    //         }
+    //     }
+    // }
 
     cout << "Nb spheres: " << spheres.size() << endl;
 
-    Light lampe = Light(Point{300, -200, 200}, Color{1000, 1000, 1000});
+    Light lampe = Light(Point{300, -200, 200}, Color{100000, 100000, 100000});
     scene.addLight(lampe);
-    Light lampe2 = Light(Point{0, -500, 200}, Color{1000, 0, 0});
+    Light lampe2 = Light(Point{0, -500, 200}, Color{100000, 0, 0});
     scene.addLight(lampe2);
 
     // Sphere sol = Sphere(10000, Point{0,10400,-1000}, Color{1,1,1});
@@ -443,79 +447,94 @@ int main() {
 
     cout << "Nb bounding: " << countBoundingBox(objectHierarchy, 0) << endl;
 
+    int nb = 100;
 
-    for (int y = 0; static_cast<float>(y) < height; y++) {
-        for (int x = 0; static_cast<float>(x) < width; x++) {
-            Point pixel = Point(x * 2 - width , y * 2 - height, 0);
-            Point origin = Point(0,0, -focal);
-            Direction direction = pixel - origin;
-
-            Rayon rayon = Rayon(pixel, direction);
-
-            // IntersectionSphere it = intersectSphere(rayon, scene.hierarchy.spheres);
-
-            IntersectionSphere it = intersectObject(rayon, scene.hierarchy);
-
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             Color col = Color();
-            if (it.isIntersection) {
-                for (Light light : scene.lights) {
-                    Direction to_light = light.position - it.intersection;
-                    float light_dist = to_light.length();
-                    float cos = to_light.normalize().dot(it.normal);
+            for(int l = 0; l < nb; l++) {
+                float offsetX = (rand() % 100) * 0.05f ;
+                float offsetY = (rand() % 100) * 0.05f;
 
-                    if (cos < 0) {
-                        cos = 0;
-                    }else if (cos > 1) {
-                        cos = 1;
-                    }
+                Point pixel = Point(x * 2 - width + (offsetX) , y * 2 - height + (offsetY), 0);
+                Point origin = Point(0,0, static_cast<float>(-focal));
+                Direction direction = pixel - origin;
 
-                    Color v = it.sphere.albedo * light.intensity * (cos / light_dist);
+                Rayon rayon = Rayon(pixel, direction);
 
-                    Direction shadow_direction = to_light.normalize();
-                    Point origin = it.intersection + shadow_direction * 0.1;
+                // IntersectionSphere it = intersectSphere(rayon, scene.hierarchy.spheres);
 
-                    Rayon shadow_rayon = Rayon(origin, shadow_direction);
-                    IntersectionSphere it_shadow = intersectObject(shadow_rayon, scene.hierarchy);
+                IntersectionSphere it = intersectObject(rayon, scene.hierarchy);
 
-                    float visibility = 1;
+                if (it.isIntersection) {
+                    int rdmLight = rand() % scene.lights.size();
+                    Light light = scene.lights[rdmLight];
+                    // for (Light light : scene.lights) {
+                        Direction to_light = light.position - (it.intersection);
+                        float light_dist = to_light.length();
+                        float cos = to_light.normalize().dot(it.normal);
 
-                    if(!it_shadow.isIntersection) {
-                        visibility = 1;
-                    }else if (it_shadow.distance > light_dist) {
-                        visibility = 1;
-                    }
+                        if (cos < 0) {
+                            cos = 0;
+                        }else if (cos > 1) {
+                            cos = 1;
+                        }
 
-                    col = col + v * visibility;
+                        Color v = it.sphere.albedo * light.intensity * (cos / light_dist);
 
-                    // IntersectionSphere it2 = intersectObject(rayonLampe, scene.hierarchy);
-                    // if (!it2.isIntersection) {
-                    //     float v = abs(norm.dot(l_i));
-                    //     float len_l = rayonLampe.direction.length_squared();
-                    //
-                    //     col.red += light.intensity.red / len_l * sphereAlbedo.red * v;
-                    //     col.green += light.intensity.green / len_l * sphereAlbedo.green * v;
-                    //     col.blue += light.intensity.blue / len_l * sphereAlbedo.blue * v;
-                    // }else {
-                    //     float len_l = rayonLampe.direction.length();
-                    //     if (len_l < rayonLampe.getIntersectionDistance(it2.distance)) {
-                    //         float v = abs(norm.dot(l_i));
-                    //
-                    //         col.red += light.intensity.red / sq(len_l) * sphereAlbedo.red * v;
-                    //         col.green += light.intensity.green / sq(len_l) * sphereAlbedo.green * v;
-                    //         col.blue += light.intensity.blue / sq(len_l) * sphereAlbedo.blue * v;
-                    //     }
+                        Direction shadow_direction = to_light.normalize();
+                        Point origin_delta = it.intersection + shadow_direction * 0.1;
+
+                        Rayon shadow_rayon = Rayon(origin_delta, shadow_direction);
+                        IntersectionSphere it_shadow = intersectObject(shadow_rayon, scene.hierarchy);
+
+                        float visibility = 0;
+
+                        if(!it_shadow.isIntersection) {
+                            visibility = 1;
+                        }else if (it_shadow.distance > light_dist) {
+                            visibility = 1;
+                        }
+
+                        col = col + v * visibility;
+
+                        // IntersectionSphere it2 = intersectObject(rayonLampe, scene.hierarchy);
+                        // if (!it2.isIntersection) {
+                        //     float v = abs(norm.dot(l_i));
+                        //     float len_l = rayonLampe.direction.length_squared();
+                        //
+                        //     col.red += light.intensity.red / len_l * sphereAlbedo.red * v;
+                        //     col.green += light.intensity.green / len_l * sphereAlbedo.green * v;
+                        //     col.blue += light.intensity.blue / len_l * sphereAlbedo.blue * v;
+                        // }else {
+                        //     float len_l = rayonLampe.direction.length();
+                        //     if (len_l < rayonLampe.getIntersectionDistance(it2.distance)) {
+                        //         float v = abs(norm.dot(l_i));
+                        //
+                        //         col.red += light.intensity.red / sq(len_l) * sphereAlbedo.red * v;
+                        //         col.green += light.intensity.green / sq(len_l) * sphereAlbedo.green * v;
+                        //         col.blue += light.intensity.blue / sq(len_l) * sphereAlbedo.blue * v;
+                        //     }
+                        // }
                     // }
-
-                    if (col.red > 255) {
-                        col.red = 255;
-                    }
-                    if (col.blue > 255) {
-                        col.blue = 255;
-                    }
-                    if (col.green > 255) {
-                        col.green = 255;
-                    }
                 }
+                // else {
+                //     col = Color(255,180,0);
+                // }
+            }
+            col = col * static_cast<int>(scene.lights.size());
+            col.red = col.red / nb;
+            col.green = col.green / nb;
+            col.blue = col.blue / nb;
+
+            if (col.red > 255) {
+                col.red = 255;
+            }
+            if (col.blue > 255) {
+                col.blue = 255;
+            }
+            if (col.green > 255) {
+                col.green = 255;
             }
             fileOut << static_cast<int>(col.red) << " " << static_cast<int>(col.green) << " " << static_cast<int>(col.blue) << endl;
         }
