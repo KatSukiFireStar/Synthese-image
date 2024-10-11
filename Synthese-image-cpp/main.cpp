@@ -163,7 +163,8 @@ struct Rayon
 enum BDSF
 {
     Diffuse,
-    Mirror
+    Mirror,
+    Glass
 };
 
 struct Sphere
@@ -172,10 +173,13 @@ struct Sphere
     Point center;
     Color albedo;
 
-    variant<BDSF, float> bdsf;
+    BDSF bdsf;
+    float refractGlass;
 
-    Sphere(const float radius, const Point center, const Color albedo, variant<BDSF, float> bdsf) : radius(radius),
+    Sphere(const float radius, const Point center, const Color albedo, BDSF bdsf) : radius(radius),
         center(center), albedo(albedo), bdsf(bdsf) {}
+    Sphere(const float radius, const Point center, const Color albedo, const float refractGlass) : radius(radius),
+        center(center), albedo(albedo), bdsf(Glass), refractGlass(refractGlass) {}
 };
 
 void swap(Sphere &a, Sphere &b)
@@ -500,15 +504,13 @@ Color operator*(float val, const Color &col)
     return Color{col.red * val, col.green * val, col.blue * val};
 }
 
-Direction Reflect(Direction dir, Direction norm)
-{
-    return dir * 2 * (norm * (-dir.dot(norm)));
-}
+// Direction Reflect(Direction dir, Direction norm)
+// {
+//     return dir * 2 * (norm * (-dir.dot(norm)));
+// }
 
 int main()
 {
-    clock_t begin = clock();
-
     int width = 800;
     int height = 600;
 
@@ -524,6 +526,8 @@ int main()
 
     spheres.push_back(make_shared<Sphere>(180, Point{0, 0, 200}, Color{1, 1, 1}, Diffuse));
     spheres.push_back(make_shared<Sphere>(180, Point{-200, -400, 200}, Color{1, 1, 1}, Diffuse));
+    spheres.push_back(make_shared<Sphere>(10000, Point{0, 10400, -1000}, Color{1, 1, 1}, Diffuse));
+
 
     // int n = 10;
     // float d = 300.0f / static_cast<float>(n);
@@ -532,7 +536,7 @@ int main()
     // for (int i = -n; i < n; i++) {
     //     for (int j = -n; j < n; j++) {
     //         for (int k = -n; k < n; k++) {
-    //             spheres.push_back(make_shared<Sphere>(radius, Point{static_cast<float>(i) * d, static_cast<float>(j) * d, 200 + static_cast<float>(k) * d}, Color::white()));
+    //             spheres.push_back(make_shared<Sphere>(radius, Point{static_cast<float>(i) * d, static_cast<float>(j) * d, 200 + static_cast<float>(k) * d}, Color::white(), Diffuse));
     //         }
     //     }
     // }
@@ -544,8 +548,7 @@ int main()
     Light lampe2 = Light(Point{0, -500, 200}, Color{100000, 0, 0});
     scene.addLight(lampe2);
 
-    shared_ptr<Sphere> sol = make_shared<Sphere>(10000, Point{0, 10400, -1000}, Color{1, 1, 1}, Mirror);
-    spheres.push_back(sol);
+
 
     shared_ptr<ObjectHierarchy> objectHierarchy = buildHierarchy(spheres);
     scene.hierarchy = objectHierarchy;
@@ -553,6 +556,7 @@ int main()
 
     cout << "Nb bounding: " << countBoundingBox(objectHierarchy, 0) << endl;
 
+    clock_t begin = clock();
     int nb = 10;
 
     for (int y = 0; y < height; y++)
@@ -617,8 +621,8 @@ int main()
                             col = col + (visibility / lightProba * v);
                             break;
                         case Mirror:
-                            Direction mirrorDirection = Reflect();
-                            Rayon rayMirror = Rayon{it.intersection, mirrorDirection};
+                            // Direction mirrorDirection = Reflect();
+                            // Rayon rayMirror = Rayon{it.intersection, mirrorDirection};
                             break;
                         default:
                             break;
