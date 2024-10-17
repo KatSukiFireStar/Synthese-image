@@ -11,7 +11,14 @@ class Vec3:
     z: float
 
     def __add__(self, other):
-        return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+        if type(other) == Vec3:
+            return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+        elif type(other) == float:
+            return Vec3(self.x + other, self.y + other, self.z + other)
+
+
+    def __sub__(self, other):
+        return Vec3(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __rmul__(self, other:float):
         return Vec3(self.x * other, self.y * other, self.z * other)
@@ -36,19 +43,28 @@ v0 = Vec3(200 * 1000 / 3600, 0, 0)
 
 g = 10
 m = 80
-t = 0
 dt = 0.01
-p = p0
-v = v0
 coef = 0.315
 
+F_d = - coef * v0.norm() * v0
 F_g = Vec3(0, 0, -1 * m * g)
+
+t = 0 + dt
+p_dt = p0
+p = p0 + dt * v0
+v = v0 + dt * (F_d + F_g) / m
 
 px = list()
 pz = list()
 pt = list()
 pvx = list()
 pvz = list()
+
+pz.append(p0.z)
+px.append(p0.x)
+pt.append(0)
+pvx.append(v0.x)
+pvz.append(v0.z)
 
 while p.z >= 0.0:
     pz.append(p.z)
@@ -60,14 +76,12 @@ while p.z >= 0.0:
     F_d = - coef * v.norm() * v
     a:Vec3 = (F_d + F_g) / m
 
-    p = p + dt * v
-    v = v + dt * a
+    (p_dt, p) = (p, 2 * p - p_dt + (dt * dt) * a)
+    # p = p + dt * v
+    v = (p - p_dt) / dt
+    # v = v + dt * a
 
     t = t + dt
-
-    print("Vitesse", v)
-    print("Acceleration", a)
-    print("Coef", coef)
 
 axis[0, 0].plot(pt, pz, 'red')
 axis[0, 0].set_xlabel('Temps')
