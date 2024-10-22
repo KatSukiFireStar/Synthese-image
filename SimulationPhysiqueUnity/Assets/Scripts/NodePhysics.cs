@@ -34,9 +34,9 @@ public class NodePhysics : MonoBehaviour
         }
         _F_d = -coef * norm(_v) * _v;
         _a = (_F_g + f_links + _F_d) / _mass;
-        _v = _v + Time.deltaTime * _a;
+        _v = _v + Time.fixedDeltaTime * _a;
         
-        transform.position = lastP + Time.deltaTime * _v;
+        transform.position = lastP + Time.fixedDeltaTime * _v;
     }
 
     private float norm(Vector2 v)
@@ -55,7 +55,7 @@ public class NodePhysics : MonoBehaviour
         _a = (_F_g + f_links + _F_d) / _mass;
         
         
-        (lastP, transform.position) = (transform.position, 2 * transform.position - lastP + (Time.deltaTime * Time.deltaTime) * _a);
-        _v = (transform.position - lastP) / Time.deltaTime;
+        (lastP, transform.position) = (transform.position, 2 * transform.position - lastP + (Time.fixedDeltaTime * Time.fixedDeltaTime) * _a);
+        _v = (transform.position - lastP) / Time.fixedDeltaTime;
     }
 }
