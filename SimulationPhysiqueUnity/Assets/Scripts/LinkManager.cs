@@ -52,16 +52,16 @@ public class LinkManager : MonoBehaviour
         if (anchors.Count != 0)
         {
             res = hardness * ((anchors[0].transform.position - links[0].transform.position).magnitude - lengthResting);
-            return (anchors[0].transform.position - links[0].transform.position) * res;
+            return (anchors[0].transform.position - links[0].transform.position).normalized * res;
         }
 
         if (links[1].transform == t)
         {
             res = hardness * ((links[0].transform.position - links[1].transform.position).magnitude - lengthResting);
-            return (links[0].transform.position - links[1].transform.position) * res;
+            return (links[0].transform.position - links[1].transform.position).normalized * res;
         }
         res = hardness * ((links[1].transform.position - links[0].transform.position).magnitude - lengthResting);
-        return (links[1].transform.position - links[0].transform.position) * res;
+        return (links[1].transform.position - links[0].transform.position).normalized * res;
         
     }
 }
