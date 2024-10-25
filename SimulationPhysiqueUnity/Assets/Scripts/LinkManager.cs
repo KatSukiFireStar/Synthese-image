@@ -46,7 +46,7 @@ public class LinkManager : MonoBehaviour
         }
     }
     
-    public Vector2 GetForce(Transform t)
+    public Vector3 GetForce(Transform t)
     {
         float res;
         if (anchors.Count != 0)
