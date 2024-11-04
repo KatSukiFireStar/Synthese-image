@@ -11,9 +11,8 @@ public class LinkManager : MonoBehaviour
     private List<GameObject> anchors = new();
     [SerializeField] 
     private float hardness;
-    [SerializeField]
-    private float lengthResting;
     
+    private float lengthResting;
     private LineRenderer _renderer;
     
     void Start()
@@ -23,11 +22,13 @@ public class LinkManager : MonoBehaviour
         {
             _renderer.SetPosition(0, anchors[0].transform.position);
             _renderer.SetPosition(1, links[0].transform.position);
+            lengthResting = (anchors[0].transform.position - links[0].transform.position).magnitude;
         }
         else
         {
             _renderer.SetPosition(0, links[0].transform.position);
             _renderer.SetPosition(1, links[1].transform.position);
+            lengthResting = (links[1].transform.position - links[0].transform.position).magnitude;
         }
         
     }
@@ -55,12 +56,11 @@ public class LinkManager : MonoBehaviour
             return (anchors[0].transform.position - links[0].transform.position).normalized * res;
         }
 
+        res = hardness * ((links[1].transform.position - links[0].transform.position).magnitude - lengthResting);
         if (links[1].transform == t)
         {
-            res = hardness * ((links[0].transform.position - links[1].transform.position).magnitude - lengthResting);
             return (links[0].transform.position - links[1].transform.position).normalized * res;
         }
-        res = hardness * ((links[1].transform.position - links[0].transform.position).magnitude - lengthResting);
         return (links[1].transform.position - links[0].transform.position).normalized * res;
         
     }

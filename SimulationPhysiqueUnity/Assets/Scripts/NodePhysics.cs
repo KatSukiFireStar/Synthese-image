@@ -28,7 +28,7 @@ public class NodePhysics : MonoBehaviour
         _F_d = -coef * norm(_v) * _v;
         lastP = transform.position;
         
-        _attenuation = (lastP - transform.position).normalized * _v.magnitude; 
+        _attenuation = _v.magnitude * 20 * (lastP - transform.position).normalized; 
         
         Vector3 f_links = new();
         foreach (GameObject link in links)
@@ -55,7 +55,7 @@ public class NodePhysics : MonoBehaviour
         {
             f_links += link.GetComponent<LinkManager>().GetForce(transform);
         }
-        _attenuation = (lastP - transform.position).normalized * 20 * _v.magnitude; 
+        _attenuation = _v.magnitude * 20 * (lastP - transform.position).normalized; 
         _F_d = -coef * norm(_v) * _v;
         _a = (_F_g + f_links + _F_d + _attenuation) / _mass;
         
