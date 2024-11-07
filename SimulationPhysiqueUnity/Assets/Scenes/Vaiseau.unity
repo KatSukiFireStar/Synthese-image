@@ -219,8 +219,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2e418dc2e806444e9d98853376b4868, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  propulsion: 10
+  propulsion: 100
   mass: 1
+  angularSpeed: 80
+  inertia: 1
   directionObject: {fileID: 1995837856}
   propulseur:
   - propulseurGO: {fileID: 892632924}
@@ -559,7 +561,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 0.9056604, g: 0, b: 0, a: 1}
   m_FlipX: 0
