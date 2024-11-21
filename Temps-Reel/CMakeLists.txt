@@ -15,6 +15,8 @@ include_directories(glm/glm)
 
 find_package(OpenGL REQUIRED)
 
-add_executable(myapp-clion main.cpp)
+add_executable(myapp-clion main.cpp
+        shader.cpp
+        shader.h)
 
 target_link_libraries(myapp-clion glfw libglew_static glm)
